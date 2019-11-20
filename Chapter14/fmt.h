@@ -33,7 +33,9 @@ extern char *Fmt_string (const char *fmt, ...);
 extern char *Fmt_vstring(const char *fmt, va_list_box *box);
 /// take a conversion function, and return the previous one
 extern T Fmt_register(int code, T cvt);
-/// two conversion functions
+/// two conversion functions, Fmt_putd is used in conversion functions
+/// where a single value is to be printed
+/// Fmt_puts is used where a string needs to be printed
 extern void Fmt_putd(const char *str, int len,
 	int put(int c, void *cl), void *cl,
 	unsigned char flags[256], int width, int precision);
