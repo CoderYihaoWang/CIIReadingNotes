@@ -5,10 +5,24 @@ static char rcsid[] = "$Id: str.c 197 2008-09-27 21:59:31Z drhanson $";
 #include "fmt.h"
 #include "str.h"
 #include "mem.h"
+/// this converts the defined index i to its conventioal representation
+/// however, this seems anti-intuitional for me...
+/// in most other languages, a string is not indexed in such a way
+/// 1 2 3 4 5 6 7
+/// | | | | | | |
+///  s t r i n g   len == 6
+/// | | | | | | |
+///-6-5-4-3-2-1 0 
+///   converted to:
+/// 0 1 2 3 4 5 6
 #define idx(i, len) ((i) <= 0 ? (i) + (len) : (i) - 1)
+/// this macro converts the two indices x and y to the conventional representation
+/// this will change the arguments i and j as the side-effect
+/// this is used in every conversion functions below
 #define convert(s, i, j) do { int len; \
 	assert(s); len = strlen(s); \
 	i = idx(i, len); j = idx(j, len); \
+	/// using a { } to make the macro cleaner
 	if (i > j) { int t = i; i = j; j = t; } \
 	assert(i >= 0 && j <= len); } while (0)
 char *Str_sub(const char *s, int i, int j) {
@@ -55,10 +69,13 @@ char *Str_cat(const char *s1, int i1, int j1,
 	*p = '\0';
 	return str;
 }
+/// goes through the va_list twice
+/// return a string which is an aggregation of all strings in the param list
 char *Str_catv(const char *s, ...) {
 	char *str, *p;
 	const char *save = s;
 	int i, j, len = 0;
+	/// first pass: to get the total length
 	va_list ap;
 	va_start(ap, s);
 	while (s) {
@@ -70,6 +87,7 @@ char *Str_catv(const char *s, ...) {
 	}
 	va_end(ap);
 	p = str = ALLOC(len + 1);
+	/// second pass: concat
 	s = save;
 	va_start(ap, s);
 	while (s) {
@@ -84,17 +102,24 @@ char *Str_catv(const char *s, ...) {
 	*p = '\0';
 	return str;
 }
+/// map characters in charset from to corresponding ones in to
 char *Str_map(const char *s, int i, int j,
 	const char *from, const char *to) {
+	/// note this is static, if a map is ommited, the last map will be used
+	/// it is not guaranteed to be default to 0 or the same as input
 	static char map[256] = { 0 };
 	if (from && to) {
 		unsigned c;
+		/// default mapping
 		for (c = 0; c < sizeof map; c++)
 			map[c] = c;
+		/// user defined mapping
 		while (*from && *to)
 			map[(unsigned char)*from++] = *to++;
+		/// from and to must be of the same size
 		assert(*from == 0 && *to == 0);
 	} else {
+		/// ??
 		assert(from == NULL && to == NULL && s);
 		assert(map['a']);
 	}
@@ -109,6 +134,7 @@ char *Str_map(const char *s, int i, int j,
 	} else
 		return NULL;
 }
+/// return the positive version of the position
 int Str_pos(const char *s, int i) {
 	int len;
 	assert(s);
@@ -117,6 +143,7 @@ int Str_pos(const char *s, int i) {
 	assert(i >= 0 && i <= len);
 	return i + 1;
 }
+/// is the sub string [i..j]'s length
 int Str_len(const char *s, int i, int j) {
 	convert(s, i, j);
 	return j - i;
@@ -127,6 +154,7 @@ int Str_cmp(const char *s1, int i1, int j1,
 	convert(s2, i2, j2);
 	s1 += i1;
 	s2 += i2;
+	/// boundary check
 	if (j1 - i1 < j2 - i2) {
 		int cond = strncmp(s1, s2, j1 - i1);
 		return cond == 0 ? -1 : cond;
@@ -136,6 +164,7 @@ int Str_cmp(const char *s1, int i1, int j1,
 	} else
 		return strncmp(s1, s2, j1 - i1);
 }
+/// indexOf, returns the position before occurance
 int Str_chr(const char *s, int i, int j, int c) {
 	convert(s, i, j);
 	for ( ; i < j; i++)
@@ -143,6 +172,7 @@ int Str_chr(const char *s, int i, int j, int c) {
 			return i + 1;
 	return 0;
 }
+/// lastIndexOf
 int Str_rchr(const char *s, int i, int j, int c) {
 	convert(s, i, j);
 	while (j > i)
@@ -150,6 +180,7 @@ int Str_rchr(const char *s, int i, int j, int c) {
 			return j + 1;
 	return 0;
 }
+/// the place of first char in s which is contained in set
 int Str_upto(const char *s, int i, int j,
 	const char *set) {
 	assert(set);
@@ -159,6 +190,7 @@ int Str_upto(const char *s, int i, int j,
 			return i + 1;
 	return 0;
 }
+/// the last place in s which is a char in set
 int Str_rupto(const char *s, int i, int j,
 	const char *set) {
 	assert(set);
@@ -168,6 +200,7 @@ int Str_rupto(const char *s, int i, int j,
 			return j + 1;
 	return 0;
 }
+/// first occurance of a substring
 int Str_find(const char *s, int i, int j,
 	const char *str) {
 	int len;
@@ -186,6 +219,7 @@ int Str_find(const char *s, int i, int j,
 				return i + 1;
 	return 0;
 }
+/// last occurance of a substring
 int Str_rfind(const char *s, int i, int j,
 	const char *str) {
 	int len;
@@ -204,6 +238,10 @@ int Str_rfind(const char *s, int i, int j,
 				return j - len + 1;
 	return 0;
 }
+/// if the ith char in s is any of set?
+/// returns the position after the found one
+/// otherwise returns 0
+/// same as Str_upto except that the position after the occurance is returned
 int Str_any(const char *s, int i, const char *set) {
 	int len;
 	assert(s);
@@ -215,6 +253,8 @@ int Str_any(const char *s, int i, const char *set) {
 		return i + 2;
 	return 0;
 }
+/// check whether in s there is a consecutive string of chars in set
+/// returns the index after occurance
 int Str_many(const char *s, int i, int j,
 	const char *set) {
 	assert(set);
@@ -227,6 +267,7 @@ int Str_many(const char *s, int i, int j,
 	}
 	return 0;
 }
+/// same as above, but returns the position before the occurance
 int Str_rmany(const char *s, int i, int j,
 	const char *set) {
 	assert(set);
@@ -239,6 +280,9 @@ int Str_rmany(const char *s, int i, int j,
 	}
 	return 0;
 }
+/// compare s's substring[i..j] and string str's first j - i places
+/// returns the position after the occurance
+/// same as Str_find except that the returned position is the position after occurance
 int Str_match(const char *s, int i, int j,
 	const char *str) {
 	int len;
@@ -270,6 +314,7 @@ int Str_rmatch(const char *s, int i, int j,
 		return j - len + 1;
 	return 0;
 }
+/// format a string
 void Str_fmt(int code, va_list_box *box,
 	int put(int c, void *cl), void *cl,
 	unsigned char flags[], int width, int precision) {

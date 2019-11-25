@@ -38,5 +38,6 @@ extern int Str_rmatch(const char *s, int i, int j,
 extern void Str_fmt(int code, va_list_box *box,
 	int put(int c, void *cl), void *cl,
 	unsigned char flags[], int width, int precision);
+/// interesing as there is no T in this interface...
 #undef T
 #endif
