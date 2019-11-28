@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include "fmt.h"
 #define T Text_T
+/// high level string: a c-string (without a '\0') plus the length
 typedef struct T {
 	int len;
 	const char *str;

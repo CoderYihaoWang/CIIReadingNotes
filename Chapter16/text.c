@@ -6,11 +6,16 @@ static const char *rcsid = "$Id: text.c 197 2008-09-27 21:59:31Z drhanson $";
 #include "text.h"
 #include "mem.h"
 #define T Text_T
+/// index converter
 #define idx(i, len) ((i) <= 0 ? (i) + (len) : (i) - 1)
+
 #define isatend(s, n) ((s).str+(s).len == current->avail\
 	&& current->avail + (n) <= current->limit)
+/// whether the string starting from the ith char of s is equal to t
+/// assuming the length of string &(s).str[i] is at least the same as t
 #define equal(s, i, t) \
 	(memcmp(&(s).str[i], (t).str, (t).len) == 0)
+
 struct Text_save_T {
 	struct chunk *current;
 	char *avail;
@@ -44,8 +49,10 @@ static struct chunk {
 	char *avail;
 	char *limit;
 } head = { NULL, NULL, NULL }, *current = &head;
+/// allocate a chunck of memory
 static char *alloc(int len) {
 	assert(len >= 0);
+	/// if there is enough space in the current chunk
 	if (current->avail + len > current->limit) {
 		current = current->link = 
 			ALLOC(sizeof (*current) + 10*1024 + len);
