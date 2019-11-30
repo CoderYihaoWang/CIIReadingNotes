@@ -98,7 +98,7 @@ T Text_sub(T s, int i, int j) {
 	text.str = s.str + i;
 	return text;
 }
-/// copy a string to a box
+/// copy a string into a box
 T Text_put(const char *str) {
 	T text;
 	assert(str);
@@ -189,11 +189,13 @@ T Text_reverse(T s) {
 	}
 }
 T Text_map(T s, const T *from, const T *to) {
+	/// a static array keeps the result to the next call
 	static char map[256];
 	static int inited = 0;
 	assert(s.len >= 0 && s.str);
 	if (from && to) {
 		int k;
+		/// initialization of the map, this happens every time if to and from are both provided
 		for (k = 0; k < (int)sizeof map; k++)
 			map[k] = k;
 		assert(from->len == to->len);
@@ -206,6 +208,7 @@ T Text_map(T s, const T *from, const T *to) {
 	}
 	if (s.len == 0)
 		return Text_null;
+	/// if one from and to is not provided, then use the map which was used last time
 	else {
 		T text;
 		int i;
@@ -231,6 +234,12 @@ int Text_cmp(T s1, T s2) {
 	} else
 		return memcmp(s1.str, s2.str, s1.len);
 }
+/// These two functions are related to memory control
+/// whenever one uses the Text interface, he should
+/// call Text_save before all usages,
+/// and call Text_restore after all works have been finished
+/// this designe is similar to va_start and va_end
+
 /// saves a snap shot of a string just made on chunks
 Text_save_T Text_save(void) {
 	Text_save_T save;
@@ -253,6 +262,7 @@ void Text_restore(Text_save_T *save) {
 	}
 	current->link = NULL;
 }
+/// find a char in string
 int Text_chr(T s, int i, int j, int c) {
 	assert(s.len >= 0 && s.str);
 	i = idx(i, s.len);
@@ -264,6 +274,7 @@ int Text_chr(T s, int i, int j, int c) {
 			return i + 1;
 	return 0;
 }
+/// find a char from the right
 int Text_rchr(T s, int i, int j, int c) {
 	assert(s.len >= 0 && s.str);
 	i = idx(i, s.len);
@@ -275,6 +286,7 @@ int Text_rchr(T s, int i, int j, int c) {
 			return j + 1;
 	return 0;
 }
+/// find any in the set from the left
 int Text_upto(T s, int i, int j, T set) {
 	assert(set.len >= 0 && set.str);
 	assert(s.len >= 0 && s.str);
@@ -287,6 +299,7 @@ int Text_upto(T s, int i, int j, T set) {
 			return i + 1;
 	return 0;
 }
+/// find any in the set from the right
 int Text_rupto(T s, int i, int j, T set) {
 	assert(set.len >= 0 && set.str);
 	assert(s.len >= 0 && s.str);
@@ -299,6 +312,7 @@ int Text_rupto(T s, int i, int j, T set) {
 			return j + 1;
 	return 0;
 }
+/// find substring
 int Text_find(T s, int i, int j, T str) {
 	assert(str.len >= 0 && str.str);
 	assert(s.len >= 0 && s.str);
@@ -337,6 +351,7 @@ int Text_rfind(T s, int i, int j, T str) {
 				return j - str.len + 1;
 	return 0;
 }
+/// similar to upto, but returns i + 2 instead of i + 1
 int Text_any(T s, int i, T set) {
 	assert(s.len >= 0 && s.str);
 	assert(set.len >= 0 && set.str);
@@ -346,6 +361,8 @@ int Text_any(T s, int i, T set) {
 		return i + 2;
 	return 0;
 }
+/// find a consecutive string in which all chars are in set
+/// and return the index after this sequence
 int Text_many(T s, int i, int j, T set) {
 	assert(set.len >= 0 && set.str);
 	assert(s.len >= 0 && s.str);
@@ -362,6 +379,7 @@ int Text_many(T s, int i, int j, T set) {
 	}
 	return 0;
 }
+/// find the position before the occurance of the consecutive sequence in set
 int Text_rmany(T s, int i, int j, T set) {
 	assert(set.len >= 0 && set.str);
 	assert(s.len >= 0 && s.str);
@@ -378,6 +396,7 @@ int Text_rmany(T s, int i, int j, T set) {
 	}
 	return 0;
 }
+/// similar to find, but returns the position after the occurance
 int Text_match(T s, int i, int j, T str) {
 	assert(str.len >= 0 && str.str);
 	assert(s.len >= 0 && s.str);
@@ -394,6 +413,7 @@ int Text_match(T s, int i, int j, T str) {
 		return i + str.len + 1;
 	return 0;
 }
+/// similar to rfind, but returns the positoin before occurance
 int Text_rmatch(T s, int i, int j, T str) {
 	assert(str.len >= 0 && str.str);
 	assert(s.len >= 0 && s.str);
