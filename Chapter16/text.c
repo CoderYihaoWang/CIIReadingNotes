@@ -8,14 +8,15 @@ static const char *rcsid = "$Id: text.c 197 2008-09-27 21:59:31Z drhanson $";
 #define T Text_T
 /// index converter
 #define idx(i, len) ((i) <= 0 ? (i) + (len) : (i) - 1)
-
+/// to test whether it is possible to append a string with the length of n
+/// to the end of string s
 #define isatend(s, n) ((s).str+(s).len == current->avail\
 	&& current->avail + (n) <= current->limit)
 /// whether the string starting from the ith char of s is equal to t
 /// assuming the length of string &(s).str[i] is at least the same as t
 #define equal(s, i, t) \
 	(memcmp(&(s).str[i], (t).str, (t).len) == 0)
-
+/// a snap shot of the chunk status
 struct Text_save_T {
 	struct chunk *current;
 	char *avail;
@@ -44,18 +45,23 @@ const T Text_ucase  = {  26, cset + 'A' };
 const T Text_lcase  = {  26, cset + 'a' };
 const T Text_digits = {  10, cset + '0' };
 const T Text_null   = {   0, cset };
+/// a linked list of memory chunks which may contain 
 static struct chunk {
 	struct chunk *link;
 	char *avail;
 	char *limit;
 } head = { NULL, NULL, NULL }, *current = &head;
-/// allocate a chunck of memory
+/// allocate a chunck of memory to store a string
+/// returns the begginging address of the chunk
+/// alloc is invoked on the global struct current only
 static char *alloc(int len) {
 	assert(len >= 0);
-	/// if there is enough space in the current chunk
+	/// if there is not enough space in the current chunk
+	/// then allocate a new chunck, and set the pointer current to it
 	if (current->avail + len > current->limit) {
 		current = current->link = 
 			ALLOC(sizeof (*current) + 10*1024 + len);
+			/// the string is attached to the end of the discriptor
 		current->avail = (char *)(current + 1);
 		current->limit = current->avail + 10*1024 + len;
 		current->link = NULL;
@@ -63,12 +69,14 @@ static char *alloc(int len) {
 	current->avail += len;
 	return current->avail - len;
 }
+/// returns the positive index
 int Text_pos(T s, int i) {
 	assert(s.len >= 0 && s.str);
 	i = idx(i, s.len);
 	assert(i >= 0 && i <= s.len);
 	return i + 1;
 }
+/// en-box a string
 T Text_box(const char *str, int len) {
 	T text;
 	assert(str);
@@ -77,6 +85,8 @@ T Text_box(const char *str, int len) {
 	text.len = len;
 	return text;
 }
+/// sub-string, the sub-string returned is a wraped string
+/// in which the actual string is the same as str in s
 T Text_sub(T s, int i, int j) {
 	T text;
 	assert(s.len >= 0 && s.str);
@@ -88,6 +98,7 @@ T Text_sub(T s, int i, int j) {
 	text.str = s.str + i;
 	return text;
 }
+/// copy a string to a box
 T Text_put(const char *str) {
 	T text;
 	assert(str);
@@ -95,6 +106,7 @@ T Text_put(const char *str) {
 	text.str = memcpy(alloc(text.len), str, text.len);
 	return text;
 }
+/// copy the string in a box to a native string
 char *Text_get(char *str, int size, T s) {
 	assert(s.len >= 0 && s.str);
 	if (str == NULL)
@@ -105,6 +117,7 @@ char *Text_get(char *str, int size, T s) {
 	str[s.len] = '\0';
 	return str;
 }
+/// duplicate s n times
 T Text_dup(T s, int n) {
 	assert(s.len >= 0 && s.str);
 	assert(n >= 0);
@@ -116,11 +129,14 @@ T Text_dup(T s, int n) {
 		T text;
 		char *p;
 		text.len = n*s.len;
+		/// if the space in the current chunk is enough
+		/// then allocate the duplicates at the end ...
 		if (isatend(s, text.len - s.len)) {
 			text.str = s.str;
 			p = alloc(text.len - s.len);
 			n--;
 		} else
+			/// ... otherwise allocate the duplicates in a new chunck
 			text.str = p = alloc(text.len);
 		for ( ; n-- > 0; p += s.len)
 			memcpy(p, s.str, s.len);
@@ -141,6 +157,8 @@ T Text_cat(T s1, T s2) {
 	{
 		T text;
 		text.len = s1.len + s2.len;
+		/// copy and append s2 to the end of s1 directly if s1 is the end
+		/// and the space is sufficient
 		if (isatend(s1, s2.len)) {
 			text.str = s1.str;
 			memcpy(alloc(s2.len), s2.str, s2.len);
@@ -213,6 +231,7 @@ int Text_cmp(T s1, T s2) {
 	} else
 		return memcmp(s1.str, s2.str, s1.len);
 }
+/// saves a snap shot of a string just made on chunks
 Text_save_T Text_save(void) {
 	Text_save_T save;
 	NEW(save);
@@ -221,6 +240,7 @@ Text_save_T Text_save(void) {
 	alloc(1);
 	return save;
 }
+/// roll back to the snap shot kept in save
 void Text_restore(Text_save_T *save) {
 	struct chunk *p, *q;
 	assert(save && *save);
