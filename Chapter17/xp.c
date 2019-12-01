@@ -4,6 +4,8 @@ static char rcsid[] = "$Id: xp.c 6 2007-01-22 00:45:22Z drhanson $";
 #include "assert.h"
 #include "xp.h"
 #define T XP_T
+/// in this interface, an integer is represented by a string of chars
+/// every char is representing a number from 0 to 2^8, so it is a 2^8 based number
 #define BASE (1<<8)
 static char map[] = {
 	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
@@ -14,10 +16,19 @@ static char map[] = {
 	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
 	23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
 };
+/// conversion between T and int must make sure that the
+/// value of the int does not exceed the max value of unsigned long
+/// otherwise the result is modulo based
+/// this does not very useful because, first, if the value is within
+/// the limitation of unsigned long, then an unsigned long integer
+/// could be used directly, and second, this does not add checks as to
+/// whether an overflow has occured
+/// as a result, the effect is just the same as using an unsigned long
+/// to do all the calculations
 unsigned long XP_fromint(int n, T z, unsigned long u) {
 	int i = 0;
 	do
-		z[i++] = u%BASE;
+		z[i++] = u%BASE; /// %BASE is redunt
 	while ((u /= BASE) > 0 && i < n);
 	for ( ; i < n; i++)
 		z[i] = 0;
@@ -32,11 +43,13 @@ unsigned long XP_toint(int n, T x) {
 		u = BASE*u + x[i];
 	return u;
 }
+/// is the length of the underlying char array
 int XP_length(int n, T x) {
 	while (n > 1 && x[n-1] == 0)
 		n--;
 	return n;
 }
+/// could also be written recursively, otherwise the param carry is not actually needed
 int XP_add(int n, T z, T x, T y, int carry) {
 	int i;
 	for (i = 0; i < n; i++) {
@@ -55,6 +68,12 @@ int XP_sub(int n, T z, T x, T y, int borrow) {
 	}
 	return borrow;
 }
+/// add an int y to a T x
+/// this may not be optimal as if someone wants to
+/// pass in a long int as y, he is prohibited
+/// from doing this
+/// if the param y is declared as a long int
+/// then there is no such restriction
 int XP_sum(int n, T z, T x, int y) {
 	int i;
 	for (i = 0; i < n; i++) {
@@ -64,6 +83,7 @@ int XP_sum(int n, T z, T x, int y) {
 	}
 	return y;
 }
+/// subtract an int y from T x
 int XP_diff(int n, T z, T x, int y) {
 	int i;
 	for (i = 0; i < n; i++) {
