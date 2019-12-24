@@ -3,10 +3,18 @@ static char rcsid[] = "$Id: xp.c 6 2007-01-22 00:45:22Z drhanson $";
 #include <string.h>
 #include "assert.h"
 #include "xp.h"
+
+/// in this interface, a function to create a type XP_T variable is not provided
+/// since XP_T is merely a pointer to unsigned char
+/// to use this interface, one can just create an unsigned char array
+/// either dynamic or not
+/// and just cast it to XP_T
+/// the length of that array must always be used together with the array itself
 #define T XP_T
-/// in this interface, an integer is represented by a string of chars
+/// in this interface, an integer is represented by a string of unsigned chars
 /// every char is representing a number from 0 to 2^8, so it is a 2^8 based number
-#define BASE (1<<8)
+/// the lowest bit is on the left
+#define BASE (1<<8) // the maximum number an unsigned char can represent is (1<<8) - 1
 static char map[] = {
 	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
 	36, 36, 36, 36, 36, 36, 36,
@@ -19,7 +27,7 @@ static char map[] = {
 /// conversion between T and int must make sure that the
 /// value of the int does not exceed the max value of unsigned long
 /// otherwise the result is modulo based
-/// this does not very useful because, first, if the value is within
+/// this is not very useful because, first, if the value is within
 /// the limitation of unsigned long, then an unsigned long integer
 /// could be used directly, and second, this does not add checks as to
 /// whether an overflow has occured
@@ -28,7 +36,7 @@ static char map[] = {
 unsigned long XP_fromint(int n, T z, unsigned long u) {
 	int i = 0;
 	do
-		z[i++] = u%BASE; /// %BASE is redunt
+		z[i++] = u%BASE;
 	while ((u /= BASE) > 0 && i < n);
 	for ( ; i < n; i++)
 		z[i] = 0;
@@ -44,12 +52,16 @@ unsigned long XP_toint(int n, T x) {
 	return u;
 }
 /// is the length of the underlying char array
+/// must make sure that n is larger than or equal to max possible length
+/// for accuracy
 int XP_length(int n, T x) {
 	while (n > 1 && x[n-1] == 0)
 		n--;
 	return n;
 }
-/// could also be written recursively, otherwise the param carry is not actually needed
+/// this must make sure that n is the suitable length for each of x, y and z
+/// so it is inconvenient if the three T's are of different lengths
+/// any overflow is dealt with by the carry returning value
 int XP_add(int n, T z, T x, T y, int carry) {
 	int i;
 	for (i = 0; i < n; i++) {
@@ -59,6 +71,10 @@ int XP_add(int n, T z, T x, T y, int carry) {
 	}
 	return carry;
 }
+/// underflow is dealt with by the borrow returning value
+/// the XP_X type does not actually hold negative values
+/// negative values are represented by "two's complement"
+/// that is, result_got = 2 ^ (8 * n) - actual_result
 int XP_sub(int n, T z, T x, T y, int borrow) {
 	int i;
 	for (i = 0; i < n; i++) {
@@ -74,6 +90,7 @@ int XP_sub(int n, T z, T x, T y, int borrow) {
 /// from doing this
 /// if the param y is declared as a long int
 /// then there is no such restriction
+/// note that y could be negative
 int XP_sum(int n, T z, T x, int y) {
 	int i;
 	for (i = 0; i < n; i++) {
@@ -93,6 +110,7 @@ int XP_diff(int n, T z, T x, int y) {
 	}
 	return y;
 }
+/// negation is two's complement
 int XP_neg(int n, T z, T x, int carry) {
 	int i;
 	for (i = 0; i < n; i++) {
@@ -102,6 +120,7 @@ int XP_neg(int n, T z, T x, int carry) {
 	}
 	return carry;
 }
+/// mult and plus
 int XP_mul(T z, int n, T x, int m, T y) {
 	int i, j, carryout = 0;
 	for (i = 0; i < n; i++) {
@@ -205,8 +224,12 @@ int XP_cmp(int n, T x, T y) {
 		i--;
 	return x[i] - y[i];
 }
+/// left shift is assuming that the number is read in normal, mathmatical order
+/// this is different from how it is actually restored
 void XP_lshift(int n, T z, int m, T x, int s, int fill) {
+	/// fill can only be 1's or 0's
 	fill = fill ? 0xFF : 0;
+	/// first shift the number in 8 digits as much as possible
 	{
 		int i, j = n - 1;
 		if (n > m)
@@ -223,6 +246,7 @@ void XP_lshift(int n, T z, int m, T x, int s, int fill) {
 	s %= 8;
 	if (s > 0)
 		{
+			/// shifts are achieved by multiplication
 			XP_product(n, z, z, 1<<s);
 			z[0] |= fill>>(8-s);
 		}
@@ -243,6 +267,7 @@ void XP_rshift(int n, T z, int m, T x, int s, int fill) {
 			z[n-1] |= fill<<(8-s);
 		}
 }
+/// create a XP_T from a string, anything left is marked in *end
 int XP_fromstr(int n, T z, const char *str,
 	int base, char **end) {
 	const char *p = str;
@@ -282,6 +307,7 @@ char *XP_tostr(char *str, int size, int base,
 	} while (n > 1 || x[0] != 0);
 	assert(i < size);
 	str[i] = '\0';
+	/// reverse
 	{
 		int j;
 		for (j = 0; j < --i; j++) {
