@@ -149,16 +149,19 @@ int XP_product(int n, T z, T x, int y) {
 	}
 	return carry;
 }
+/// division of x / y
 int XP_div(int n, T q, T x, int m, T y, T r, T tmp) {
 	int nx = n, my = m;
 	n = XP_length(n, x);
 	m = XP_length(m, y);
 	if (m == 1) {
+		/// division by zero: return 0!
 		if (y[0] == 0)
 			return 0;
 		r[0] = XP_quotient(nx, q, x, y[0]);
 		memset(r + 1, '\0', my - 1);
 	} else if (m > n) {
+		/// the divisor is larger than the dividend, return 0
 		memset(q, '\0', nx);
 		memcpy(r, x, n);
 		memset(r + n, '\0', my - n);
