@@ -17,7 +17,7 @@ static char rcsid[] = "$Id: xp.c 6 2007-01-22 00:45:22Z drhanson $";
 #define BASE (1<<8) // the maximum number an unsigned char can represent is (1<<8) - 1
 static char map[] = {
 	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-	36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36,                        /// actually not legal inputs, must be detected later
 	10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
 	23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
 	36, 36, 36, 36, 36, 36,
@@ -155,13 +155,13 @@ int XP_div(int n, T q, T x, int m, T y, T r, T tmp) {
 	n = XP_length(n, x);
 	m = XP_length(m, y);
 	if (m == 1) {
-		/// division by zero: return 0!
+		/// division by zero: return 0 -- indicating a failure
 		if (y[0] == 0)
 			return 0;
 		r[0] = XP_quotient(nx, q, x, y[0]);
 		memset(r + 1, '\0', my - 1);
 	} else if (m > n) {
-		/// the divisor is larger than the dividend, return 0
+		/// the divisor is larger than the dividend, the result is 0
 		memset(q, '\0', nx);
 		memcpy(r, x, n);
 		memset(r + n, '\0', my - n);
