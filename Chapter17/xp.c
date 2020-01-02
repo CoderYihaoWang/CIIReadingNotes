@@ -166,6 +166,7 @@ int XP_div(int n, T q, T x, int m, T y, T r, T tmp) {
 		memcpy(r, x, n);
 		memset(r + n, '\0', my - n);
 	} else {
+		/// 
 		int k;
 		unsigned char *rem = tmp, *dq = tmp + n + 1;
 		assert(2 <= m && m <= n);
