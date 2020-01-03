@@ -19,6 +19,8 @@ struct T {
 #define maxdigits(x,y) ((x)->ndigits > (y)->ndigits ? \
 	(x)->ndigits : (y)->ndigits)
 #define isone(x) ((x)->ndigits==1 && (x)->digits[0]==1)
+
+///
 static T normalize(T z, int n);
 static int cmp(T x, T y);
 static T mk(int size) {
