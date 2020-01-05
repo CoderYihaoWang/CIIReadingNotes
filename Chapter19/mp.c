@@ -44,6 +44,7 @@ static int applyu(T op(T, T, T), T z, T x,
 	op(z, x, tmp[2]);
 	return carry != 0;
 }
+/// 
 static int apply(T op(T, T, T), T z, T x, long v) {
 	{ T z = tmp[2]; if (v == LONG_MIN) {
 				XP_fromint(nbytes, z, LONG_MAX + 1UL);
