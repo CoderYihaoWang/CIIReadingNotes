@@ -172,6 +172,7 @@ int XP_div(int n, T q, T x, int m, T y, T r, T tmp) {
 		assert(2 <= m && m <= n);
 		memcpy(rem, x, n);
 		rem[n] = 0;
+		/// 
 		for (k = n - m; k >= 0; k--) {
 			int qk;
 			{
