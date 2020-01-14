@@ -9,30 +9,37 @@ static const char *rcsid = "$Id: ap.c 197 2008-09-27 21:59:31Z drhanson $";
 #include "xp.h"
 #include "mem.h"
 #define T AP_T
+/// a wrapped XP_T
 struct T {
 	int sign;
+	/// digits used
 	int ndigits;
+	/// digits allocated
 	int size;
 	XP_T digits;
 };
+/// valid for pointers to AP_T
 #define iszero(x) ((x)->ndigits==1 && (x)->digits[0]==0)
 #define maxdigits(x,y) ((x)->ndigits > (y)->ndigits ? \
 	(x)->ndigits : (y)->ndigits)
 #define isone(x) ((x)->ndigits==1 && (x)->digits[0]==1)
 
-///
 static T normalize(T z, int n);
 static int cmp(T x, T y);
 static T mk(int size) {
+	/// CALLOC instead of MALLOC : the memory is initiallized to 0
 	T z = CALLOC(1, sizeof (*z) + size);
 	assert(size > 0);
 	z->sign = 1;
 	z->size = size;
 	z->ndigits = 1;
+	/// so, the digits are 0
 	z->digits = (XP_T)(z + 1);
 	return z;
 }
+/// set z to be holding the number n
 static T set(T z, long int n) {
+	/// avoiding overflow
 	if (n == LONG_MIN)
 		XP_fromint(z->size, z->digits, LONG_MAX + 1UL);
 	else if (n < 0)
@@ -42,12 +49,14 @@ static T set(T z, long int n) {
 	z->sign = n < 0 ? -1 : 1;
 	return normalize(z, z->size);
 }
+/// reduce ndigits
 static T normalize(T z, int n) {
 	z->ndigits = XP_length(n, z->digits);
 	return z;
 }
 static T add(T z, T x, T y) {
 	int n = y->ndigits;
+	/// ensure x is the longer one
 	if (x->ndigits < n)
 		return add(z, y, x);
 	else if (x->ndigits > n) {

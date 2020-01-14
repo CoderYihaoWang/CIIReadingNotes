@@ -18,6 +18,7 @@ AP_T pop(void) {
 int main(int argc, char *argv[]) {
 	int c;
 	sp = Stack_new();
+	/// using AP_fmt to format outputs
 	Fmt_register('D', AP_fmt);
 	while ((c = getchar()) != EOF)
 		switch (c) {
@@ -97,18 +98,21 @@ int main(int argc, char *argv[]) {
 			AP_free(&y);
 			break;
 		}
+		/// double the top of stack
 		case 'd': {
 			AP_T x = pop();
 			Stack_push(sp, x);
 			Stack_push(sp, AP_addi(x, 0));
 			break;
 		}
+		/// print
 		case 'p': {
 			AP_T x = pop();
 			Fmt_print("%D\n", x);
 			Stack_push(sp, x);
 			break;
 		}
+		/// output the whole stack without changing it
 		case 'f':
 			if (!Stack_empty(sp)) {
 				Stack_T tmp = Stack_new();
@@ -128,10 +132,12 @@ int main(int argc, char *argv[]) {
 			AP_free(&x);
 			break;
 		}
+		/// clear
 		case 'c': while (!Stack_empty(sp)) {
 			  	AP_T x = Stack_pop(sp);
 			  	AP_free(&x);
 			  } break;
+		/// quit
 		case 'q': while (!Stack_empty(sp)) {
 			  	AP_T x = Stack_pop(sp);
 			  	AP_free(&x);
