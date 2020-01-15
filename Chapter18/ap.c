@@ -79,6 +79,7 @@ static T sub(T z, T x, T y) {
 	assert(borrow == 0);
 	return normalize(z, z->size);
 }
+/// 
 static T mulmod(T x, T y, T p) {
 	T z, xy = AP_mul(x, y);
 	z = AP_mod(xy, p);
