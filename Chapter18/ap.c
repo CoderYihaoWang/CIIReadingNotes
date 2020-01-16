@@ -86,6 +86,7 @@ static T mulmod(T x, T y, T p) {
 	AP_free(&xy);
 	return z;
 }
+
 static int cmp(T x, T y) {
 	if (x->ndigits != y->ndigits)
 		return x->ndigits - y->ndigits;
