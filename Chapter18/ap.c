@@ -208,6 +208,7 @@ T AP_mod(T x, T y) {
 	AP_free(&q);
 	return r;
 }
+/// 
 T AP_pow(T x, T y, T p) {
 	T z;
 	assert(x);
@@ -417,3 +418,4 @@ void AP_fmt(int code, va_list_box *box,
 		width, precision);
 	FREE(buf);
 }
+ 
