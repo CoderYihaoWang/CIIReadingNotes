@@ -235,6 +235,7 @@ T AP_pow(T x, T y, T p) {
 		if (isone(y))
 			z = AP_mod(x, p);
 		else {
+			/// divide and conquer, could be used for multiplication and division, actually
 			T y2 = AP_rshift(y, 1), t = AP_pow(x, y2, p);
 			z = mulmod(t, t, p);
 			AP_free(&y2);
@@ -400,6 +401,7 @@ char *AP_tostr(char *str, int size, int base, T x) {
 	assert(x);
 	assert(base >= 2 && base <= 36);
 	assert(str == NULL || size > 1);
+	/// if a null pointer is passed in as str, then make one and return it to caller
 	if (str == NULL) {
 		{
 			int k;

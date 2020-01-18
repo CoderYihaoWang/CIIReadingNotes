@@ -11,6 +11,7 @@ static const char *rcsid = "$Id: mpcalc.c 6 2007-01-22 00:45:22Z drhanson $";
 Seq_T sp;
 int ibase = 10;
 int obase = 10;
+/// s is for signed and u for unsigned
 struct {
 	const char *fmt;
 	MP_T (*add)(MP_T, MP_T, MP_T);
@@ -40,6 +41,7 @@ int main(int argc, char *argv[]) {
 		volatile MP_T x = NULL, y = NULL, z = NULL;
 		TRY
  			switch (c) {
+			/// lifted default branch is useful when there are too many cases
 			default:
 				if (isprint(c))
 					Fmt_fprint(stderr, "?'%c'", c);
@@ -47,12 +49,15 @@ int main(int argc, char *argv[]) {
 					Fmt_fprint(stderr, "?'\\%03o'", c);
 				Fmt_fprint(stderr, " is unimplemented\n");
 				break;
+			/// ignoring blanks
 			case ' ': case '\t': case '\n': case '\f': case '\r':
 				break;
+			/// clear
 			case 'c': while (Seq_length(sp) > 0) {
 				  	MP_T x = Seq_remhi(sp);
 				  	FREE(x);
 				  } break;
+			/// quit
 			case 'q': while (Seq_length(sp) > 0) {
 				  	MP_T x = Seq_remhi(sp);
 				  	FREE(x);
