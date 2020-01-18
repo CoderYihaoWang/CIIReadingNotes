@@ -60,11 +60,13 @@ static T add(T z, T x, T y) {
 	if (x->ndigits < n)
 		return add(z, y, x);
 	else if (x->ndigits > n) {
+		/// this is how the returned value from xp add is used
 		int carry = XP_add(n, z->digits, x->digits,
 			y->digits, 0);
 		z->digits[z->size-1] = XP_sum(x->ndigits - n,
 			&z->digits[n], &x->digits[n], carry);
 	} else
+		/// same length add for XP
 		z->digits[n] = XP_add(n, z->digits, x->digits,
 			y->digits, 0);
 	return normalize(z, z->size);
@@ -79,20 +81,20 @@ static T sub(T z, T x, T y) {
 	assert(borrow == 0);
 	return normalize(z, z->size);
 }
-/// 
+/// modulo multiplication
 static T mulmod(T x, T y, T p) {
 	T z, xy = AP_mul(x, y);
 	z = AP_mod(xy, p);
 	AP_free(&xy);
 	return z;
 }
-
 static int cmp(T x, T y) {
 	if (x->ndigits != y->ndigits)
 		return x->ndigits - y->ndigits;
 	else
 		return XP_cmp(x->ndigits, x->digits, y->digits);
 }
+/// make an AP holding n
 T AP_new(long int n) {
 	return set(mk(sizeof (long int)), n);
 }
@@ -100,6 +102,7 @@ void AP_free(T *z) {
 	assert(z && *z);
 	FREE(*z);
 }
+/// the following arithmetic functions make new AP instances and return them
 T AP_neg(T x) {
 	T z;
 	assert(x);
@@ -125,10 +128,13 @@ T AP_add(T x, T y) {
 	T z;
 	assert(x);
 	assert(y);
+	/// using exclusive or to test bit-wise equality
+	/// if x and y are both positive or both negative
 	if (((x->sign^y->sign) == 0)) {
 		z = add(mk(maxdigits(x,y) + 1), x, y);
 		z->sign = iszero(z) ? 1 : x->sign;
 	} else
+		/// different signs, do subtraction instead
 		if (cmp(x, y) > 0) {
 			z = sub(mk(x->ndigits), x, y);
 			z->sign = iszero(z) ? 1 : x->sign;
@@ -139,6 +145,7 @@ T AP_add(T x, T y) {
 		}
 	return z;
 }
+/// similar ot addition, analyze signs first
 T AP_sub(T x, T y) {
 	T z;
 	assert(x);
@@ -173,12 +180,14 @@ T AP_div(T x, T y) {
 	normalize(r, r->size);
 	q->sign = iszero(q)
 		|| ((x->sign^y->sign) == 0) ? 1 : -1;
+	/// if x mod y == 0, then the quotient should be increased by 1
 	if (!((x->sign^y->sign) == 0) && !iszero(r)) {
 		int carry = XP_sum(q->size, q->digits,
 			q->digits, 1);
 		assert(carry == 0);
 		normalize(q, q->size);
 	}
+	/// only quotient is needed
 	AP_free(&r);
 	return q;
 }
@@ -205,10 +214,11 @@ T AP_mod(T x, T y) {
 		assert(borrow == 0);
 		normalize(r, r->size);
 	}
+	/// only remainder is needed
 	AP_free(&q);
 	return r;
 }
-/// 
+/// x ** y mod p
 T AP_pow(T x, T y, T p) {
 	T z;
 	assert(x);
@@ -262,9 +272,11 @@ int AP_cmp(T x, T y) {
 }
 T AP_addi(T x, long int y) {
 	unsigned char d[sizeof (unsigned long)];
+	/// t is on the stack, so no need to free it
 	struct T t;
 	t.size = sizeof d;
 	t.digits = d;
+	/// wrap a long int in an AP, same hereafter
 	return AP_add(x, set(&t, y));
 }
 T AP_subi(T x, long int y) {
@@ -303,6 +315,7 @@ long int AP_modi(T x, long int y) {
 	t.size = sizeof d;
 	t.digits = d;
 	r = AP_mod(x, set(&t, y));
+	/// because the remainder must be less than y, so there is no need to return an AP
 	rem = XP_toint(r->ndigits, r->digits);
 	AP_free(&r);
 	return rem;
@@ -311,7 +324,7 @@ T AP_lshift(T x, int s) {
 	T z;
 	assert(x);
 	assert(s >= 0);
-	z = mk(x->ndigits + ((s+7)&~7)/8);
+	z = mk(x->ndigits + ((s+7)&~7)/8); /// s / 8 rounded up
 	XP_lshift(z->size, z->digits, x->ndigits,
 		x->digits, s, 0);
 	z->sign = x->sign;
@@ -331,6 +344,7 @@ T AP_rshift(T x, int s) {
 		return z;
 	}
 }
+/// to int is modulo so that the long int result does not overflow
 long int AP_toint(T x) {
 	unsigned long u;
 	assert(x);
@@ -347,6 +361,7 @@ T AP_fromstr(const char *str, int base, char **end) {
 	int carry;
 	assert(p);
 	assert(base >= 2 && base <= 36);
+	/// standard integer parsing procedure
 	while (*p && isspace(*p))
 		p++;
 	if (*p == '-' || *p == '+')
@@ -370,6 +385,7 @@ T AP_fromstr(const char *str, int base, char **end) {
 		base, &endp);
 	assert(carry == 0);
 	normalize(z, z->size);
+	/// nothing matches
 	if (endp == p) {
 		endp = (char *)str;
 		z = AP_new(0);
