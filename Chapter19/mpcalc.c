@@ -9,9 +9,12 @@ static const char *rcsid = "$Id: mpcalc.c 6 2007-01-22 00:45:22Z drhanson $";
 #include "fmt.h"
 #include "mp.h"
 Seq_T sp;
+/// in base and out base
 int ibase = 10;
 int obase = 10;
 /// s is for signed and u for unsigned
+/// polymorphism in c !!!
+/// this is like a virtual table which dispatches methods during the run time
 struct {
 	const char *fmt;
 	MP_T (*add)(MP_T, MP_T, MP_T);
@@ -72,6 +75,7 @@ int main(int argc, char *argv[]) {
 					int i = 0;
 					for ( ;  strchr(&"zyxwvutsrqponmlkjihgfedcba9876543210"[36-ibase],
 							tolower(c)); c = getchar(), i++)
+						/// casting an unsigned int to int will help when, eg, it could be negetive
 						if (i < (int)sizeof (buf) - 1)
 							buf[i] = c;
 					if (i > (int)sizeof (buf) - 1) {
@@ -114,6 +118,7 @@ int main(int argc, char *argv[]) {
 					ibase = n;
 				else
 					obase = n;
+				/// dynamic dispatching
 				if (obase == 2 || obase == 8 || obase == 16)
 					f = &u;
 				else
@@ -123,12 +128,14 @@ int main(int argc, char *argv[]) {
 			case 'p':
 				Fmt_print(f->fmt, z = pop(), obase);
 				break;
+			/// print all values on the stack
 			case 'f': {
 				int n = Seq_length(sp);
 				while (--n >= 0)
 					Fmt_print(f->fmt, Seq_get(sp, n), obase);
 				break;
 			}
+			/// shifting
 			case '<': { long s;
 				    y = pop();
 				    z = pop();
@@ -147,6 +154,7 @@ int main(int argc, char *argv[]) {
 				    		"?%d is an illegal shift amount\n", s);
 				    	break;
 				    }; MP_rshift(z, z, s); break; }
+			/// set precision
 			case 'k': {
 				long n;
 				x = pop();
@@ -160,6 +168,7 @@ int main(int argc, char *argv[]) {
 					MP_set(n);
 				break;
 				}
+			/// double the value on the top of stack
 			case 'd': {
 				MP_T x = pop();
 				z = MP_new(0);
