@@ -9,11 +9,13 @@ static char rcsid[] = "$Id: mp.c 197 2008-09-27 21:59:31Z drhanson $";
 #include "mem.h"
 #include "xp.h"
 #include "mp.h"
+/// T : unsigned char *
 #define T MP_T
 #define sign(x) ((x)[nbytes-1]>>shift)
 #define ones(n) (~(~0UL<<(((n)-1)%8+1)))
 #define iszero(x) (XP_length(nbytes,(x))==1 && (x)[0]==0)
 #define BASE (1<<8)
+/// not wrap in do while, so it might not be hygine, as the i could have been used elsewhere
 #define bitop(op) \
 	int i; assert(z); assert(x); assert(y); \
 	for (i = 0; i < nbytes; i++) z[i] = x[i] op y[i]; \

@@ -6,6 +6,7 @@
 #include "except.h"
 #include "fmt.h"
 #define T MP_T
+/// unsigned char pointer is actually arrays of bytes
 typedef unsigned char *T;
 extern const Except_T MP_Overflow;
 extern const Except_T MP_Dividebyzero;
