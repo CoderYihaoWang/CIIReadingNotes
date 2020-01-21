@@ -11,6 +11,7 @@ static char rcsid[] = "$Id: mp.c 197 2008-09-27 21:59:31Z drhanson $";
 #include "mp.h"
 /// T : unsigned char *
 #define T MP_T
+/// get the sign bit
 #define sign(x) ((x)[nbytes-1]>>shift)
 #define ones(n) (~(~0UL<<(((n)-1)%8+1)))
 #define iszero(x) (XP_length(nbytes,(x))==1 && (x)[0]==0)
@@ -32,7 +33,7 @@ static char rcsid[] = "$Id: mp.c 197 2008-09-27 21:59:31Z drhanson $";
 const Except_T MP_Dividebyzero = { "Division by zero" };
 const Except_T MP_Overflow     = { "Overflow" };
 static int nbits  =  32;
-static int nbytes = (32-1)/8 + 1;
+static int nbytes = (32-1)/8 + 1; /// n / 8 rounded up
 static int shift  = (32-1)%8;
 static unsigned char msb = 0xFF;
 static unsigned char temp[16 + 16 + 16 + 2*16+2];
