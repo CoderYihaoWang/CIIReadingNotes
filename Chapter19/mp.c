@@ -11,6 +11,7 @@ static char rcsid[] = "$Id: mp.c 197 2008-09-27 21:59:31Z drhanson $";
 #include "mp.h"
 /// T : unsigned char *
 #define T MP_T
+/// these are machine dependent:
 /// get the sign bit
 #define sign(x) ((x)[nbytes-1]>>shift)
 #define ones(n) (~(~0UL<<(((n)-1)%8+1)))
