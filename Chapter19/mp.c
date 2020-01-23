@@ -63,6 +63,7 @@ static int apply(T op(T, T, T), T z, T x, long v) {
 	return (nbits < 8*(int)sizeof (v) &&
 	       	(v < -(1L<<(nbits-1)) || v >= (1L<<(nbits-1))));
 }
+/// 
 int MP_set(int n) {
 	int prev = nbits;
 	assert(n > 1);
