@@ -85,6 +85,7 @@ int MP_set(int n) {
 T MP_new(unsigned long u) {
 	return MP_fromintu(ALLOC(nbytes), u);
 }
+///
 T MP_fromintu(T z, unsigned long u) {
 	unsigned long carry;
 	assert(z);
