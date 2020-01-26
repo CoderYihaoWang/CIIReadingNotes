@@ -14,7 +14,7 @@ static char rcsid[] = "$Id: mp.c 197 2008-09-27 21:59:31Z drhanson $";
 /// these are machine dependent:
 /// get the sign bit
 #define sign(x) ((x)[nbytes-1]>>shift)
-/// 
+/// this will generate (n - 1) % 8 + 1 bit of 1's
 #define ones(n) (~(~0UL<<(((n)-1)%8+1)))
 #define iszero(x) (XP_length(nbytes,(x))==1 && (x)[0]==0)
 #define BASE (1<<8)
